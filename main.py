@@ -2,11 +2,11 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 import os
-import json
-import authorization as au
 
 
 def get_rating(login, password, semester=0):
+    final_return_file = []
+
     # urls
     url_main_page = "https://student.rea.ru/"
     if semester:
@@ -111,15 +111,11 @@ def get_rating(login, password, semester=0):
 
                 for i in range(len(temp_dict)):
                     final_rows_json.append(dict(zip(subjects_rows[i], temp_dict)))
-
-                # Write json file
-                with open(f"rating_table_{k}.json", "w", encoding="utf-8") as f:
-                    json.dump(final_rows_json, f, indent=2, ensure_ascii=False)
-                    os.remove(f"rating_{k}.html")
+                a = soup.find(class_="breadcrumb__fakultet__popup").text
+                final_return_file.append([a[29:a.index(',')+1] + a[62:-8], *final_rows_json])
+                os.remove(f"rating_{k}.html")
             except TypeError:
-                with open(f"rating_table_{k}.json", "w", encoding="utf-8") as f:
-                    json.dump(0, f)
-                    os.remove(f"rating_{k}.html")
-
-
-get_rating(au.login, au.password)
+                a = soup.find(class_="breadcrumb__fakultet__popup").text
+                final_return_file.append([a[29:a.index(',')+1] + a[62:-8], "Рейтинга нет"])
+                os.remove(f"rating_{k}.html")
+    return final_return_file
