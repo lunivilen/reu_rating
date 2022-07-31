@@ -1,8 +1,8 @@
+
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 import os
-
 
 def get_rating(login, password, semester=0):
     final_return_file = []
@@ -111,6 +111,7 @@ def get_rating(login, password, semester=0):
 
                 for i in range(len(temp_dict)):
                     final_rows_json.append(dict(zip(subjects_rows[i], temp_dict)))
+
                 a = soup.find(class_="breadcrumb__fakultet__popup").text
                 final_return_file.append([a[29:a.index(',')+1] + a[62:-8], *final_rows_json])
                 os.remove(f"rating_{k}.html")
