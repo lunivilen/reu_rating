@@ -3,12 +3,9 @@ from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 import os
 import json
-import authorization as au
-from datetime import datetime
 
 
 def get_rating(login, password, semester=0):
-    start = datetime.now()
     # urls
     url_main_page = "https://student.rea.ru/"
     if semester:
@@ -59,9 +56,8 @@ def get_rating(login, password, semester=0):
                 with open("rating_1.html", "w", encoding="utf-8") as f:
                     f.write(src)
             break
-
     browser.quit()
-    print(datetime.now() - start)
+
     # Getting table of scores
     for k in range(1, profile):
         with open(f"rating_{k}.html", "r", encoding="utf-8") as f:
@@ -120,6 +116,3 @@ def get_rating(login, password, semester=0):
             with open(f"rating_table_{k}.json", "w", encoding="utf-8") as f:
                 json.dump(0, f)
                 os.remove(f"rating_{k}.html")
-
-
-get_rating(au.login, au.password)
