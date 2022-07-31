@@ -3,6 +3,7 @@ from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 import os
 import json
+import authorization as au
 
 
 def get_rating(login, password, semester=0):
@@ -14,14 +15,11 @@ def get_rating(login, password, semester=0):
         url_rating = "https://student.rea.ru/rating/index.php"
 
     # Option
-    option = webdriver.FirefoxOptions()
-    option.set_preference("dom.webdriver.enable", False)
-    option.set_preference("dom.webnotifications.enabled", False)
-    option.set_preference("media.volume_scale", "0.0")
+    option = webdriver.ChromeOptions()
     option.headless = True
 
-    browser = webdriver.Firefox(options=option)
-    browser.get(url_main_page)
+    browser = webdriver.Chrome(options=option)
+    browser.get(url=url_main_page)
 
     # Parsing
     browser.find_element("xpath", "/html/body/div[4]/div/div[1]/form/div[2]/input").send_keys(login)
@@ -122,3 +120,6 @@ def get_rating(login, password, semester=0):
                 with open(f"rating_table_{k}.json", "w", encoding="utf-8") as f:
                     json.dump(0, f)
                     os.remove(f"rating_{k}.html")
+
+
+get_rating(au.login, au.password)
