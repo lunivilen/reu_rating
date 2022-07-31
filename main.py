@@ -1,8 +1,8 @@
-
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 import os
+
 
 def get_rating(login, password, semester=0):
     final_return_file = []
@@ -94,9 +94,10 @@ def get_rating(login, password, semester=0):
                         b.pop(0)
                         b = " ".join(b)
                         course_work_subject.append(b)
-                    for i in range(-1, -(len(subjects_rows) - 1), -1):
-                        if subjects_rows[i] == subjects_rows[i - 1] and subjects_rows[i][0] in course_work_subject:
-                            subjects_rows[i][0] += "(Курсовая работа)"
+                    for i in range(len(subjects_rows) - 1):
+                        if subjects_rows[i] == subjects_rows[i + 1] and subjects_rows[i][0] in course_work_subject:
+                            course_work_subject.remove(subjects_rows[i][0])
+                            subjects_rows[i + 1][0] += "(Курсовая работа или пересдача)"
 
                 scores = list(map(lambda x: x.text, soup.find_all(class_="es-rating__tab-body-item")))
                 scores = list(filter(lambda x: x != "", scores[0].split(" ")))
@@ -110,13 +111,13 @@ def get_rating(login, password, semester=0):
                     temp_dict.append(dict(zip(head_list[1:], scores_rows[i])))
 
                 for i in range(len(temp_dict)):
-                    final_rows_json.append(dict(zip(subjects_rows[i], temp_dict)))
+                    final_rows_json.append(dict.fromkeys(subjects_rows[i], temp_dict[i]))
 
                 a = soup.find(class_="breadcrumb__fakultet__popup").text
-                final_return_file.append([a[29:a.index(',')+1] + a[62:-8], *final_rows_json])
+                final_return_file.append([a[29:a.index(',') + 1] + a[62:-8], *final_rows_json])
                 os.remove(f"rating_{k}.html")
             except TypeError:
                 a = soup.find(class_="breadcrumb__fakultet__popup").text
-                final_return_file.append([a[29:a.index(',')+1] + a[62:-8], "Рейтинга нет"])
+                final_return_file.append([a[29:a.index(',') + 1] + a[62:-8], "Рейтинга нет"])
                 os.remove(f"rating_{k}.html")
     return final_return_file
