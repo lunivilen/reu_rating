@@ -3,6 +3,7 @@ from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 import os
 import json
+import authorization as au
 
 
 def get_rating(login, password, semester=0):
@@ -41,7 +42,7 @@ def get_rating(login, password, semester=0):
                                      f"/html/body/div[7]/div[2]/div[4]/div/div/div[3]/div[{profile}]/label").click()
                 browser.find_element("xpath", "/html/body/div[7]/div[2]/div[4]/div/div/button[1]").click()
                 if profile == 1:
-                    browser.get(url_rating)
+                    browser.get(url=url_rating)
                 src = browser.page_source
 
                 # Save locally site's page
@@ -51,7 +52,7 @@ def get_rating(login, password, semester=0):
             except NoSuchElementException:
                 if profile == 1:
                     profile += 1
-                    browser.get(url_rating)
+                    browser.get(url=url_rating)
                     src = browser.page_source
 
                     # Save locally site's page
@@ -119,3 +120,6 @@ def get_rating(login, password, semester=0):
                 with open(f"rating_table_{k}.json", "w", encoding="utf-8") as f:
                     json.dump(0, f)
                     os.remove(f"rating_{k}.html")
+
+
+get_rating(au.login, au.password)
