@@ -26,7 +26,7 @@ def get_rating(login, password, semester=0):
     browser.find_element("xpath", "/html/body/div[4]/div/div[1]/form/div[3]/input").send_keys(password)
     browser.find_element("xpath", "/html/body/div[4]/div/div[1]/form/input[4]").click()
 
-    soup = bs(browser.page_source, "lxml")
+    soup = bs(markup=browser.page_source, features="lxml")
     try:
         print(soup.find(class_="errortext").text)
     except AttributeError:
@@ -65,7 +65,7 @@ def get_rating(login, password, semester=0):
         for k in range(1, profile):
             with open(f"rating_{k}.html", "r", encoding="utf-8") as f:
                 src = f.read()
-            soup = bs(src, "lxml")
+            soup = bs(markup=src, features="lxml")
 
             try:
                 head_list = list(map(lambda x: x.text, soup.find(class_="es-rating__line")))
