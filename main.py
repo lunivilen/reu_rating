@@ -3,17 +3,30 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 import os
+import authorization as au
+from func_timeout import func_timeout, FunctionTimedOut
+
+
+def exit_(browser):
+    browser.quit()
+    os.remove("temp_file.json")
+    return None
 
 
 def get_rating(login, password):
     final_return_file = []
+
+    # Timer time in seconds
+    timer_time = 2
 
     # urls
     url_main_page = "https://student.rea.ru/"
 
     # Option
     option = webdriver.ChromeOptions()
-    option.headless = True
+    option.headless = False
+    option.add_argument('--no-sandbox')
+    option.add_argument('--disable-dev-shm-usage')
 
     browser = webdriver.Chrome(options=option)
     browser.get(url=url_main_page)
@@ -43,13 +56,16 @@ def get_rating(login, password):
     if profile_amount:
         while True:
             try:
-                profile = int(input(f"Ведите номер одного из {profile_amount} профилей\n"))
-                browser.find_element("xpath",
-                                     f"/html/body/div[7]/div[2]/div[4]/div/div/div[3]/div[{profile}]/label").click()
-                browser.find_element("xpath", "/html/body/div[7]/div[2]/div[4]/div/div/button[1]").click()
-                break
-            except ValueError:
-                print("Выбраный вами профиль не существует")
+                profile = int(
+                    func_timeout(timer_time, input, args=[f"Ведите номер одного из {profile_amount} профилей\n"]))
+                if 0 < profile <= profile_amount:
+                    break
+            except FunctionTimedOut:
+                return exit_(browser)
+
+        browser.find_element("xpath",
+                             f"/html/body/div[7]/div[2]/div[4]/div/div/div[3]/div[{profile}]/label").click()
+        browser.find_element("xpath", "/html/body/div[7]/div[2]/div[4]/div/div/button[1]").click()
 
     soup = bs(markup=browser.page_source, features="lxml")
     prof_n = soup.find(class_="breadcrumb__fakultet__popup").text
@@ -60,12 +76,13 @@ def get_rating(login, password):
 
     while True:
         try:
-            semester = int(input(
-                f"Введите номер одного из {semester_amount} семестров или 0, если хотите посмотреть рейтинг за все семестры\n"))
+            semester = int(func_timeout(timer_time, input, args=[
+                f"Введите номер одного из {semester_amount} семестров или 0, если хотите посмотреть рейтинг за все семестры\n"]))
             if -1 < semester <= semester_amount:
                 break
-        except ValueError:
-            print("Выбранный вами семетр не существует")
+        except FunctionTimedOut:
+            return exit_(browser)
+
     if semester:
         prof_n = prof_n[29:prof_n.index(',') + 1] + prof_n[62:-8] + f", {semester}-й семестр"
         url_rating = f"https://student.rea.ru/rating/index.php?semester={semester}-й+семестр"
@@ -140,3 +157,7 @@ def get_rating(login, password):
         os.remove(f"rating.html")
 
     return final_return_file
+
+
+with open(f"lol.json", "w", encoding="utf-8") as u:
+    json.dump(get_rating(au.login, au.password), u)
