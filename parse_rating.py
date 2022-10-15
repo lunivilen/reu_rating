@@ -1,13 +1,23 @@
 import json
+import os
+from func_timeout import func_timeout, FunctionTimedOut
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
-import os
-# from LKS.lks_bot import get_info_for_lks
+from LKS.lks_bot import get_info_for_lks
+
+
+def exit_(browser):
+    browser.quit()
+    os.remove("temp_file.json")
+    return None
 
 
 def get_rating(login, password, event):
     final_return_file = []
+
+    # Timer time in seconds
+    timer_time = 30
 
     # url
     url_main_page = "https://student.rea.ru/"
@@ -47,15 +57,15 @@ def get_rating(login, password, event):
     if profile_amount:
         while True:
             try:
-                # profile = int(get_info_for_lks(event, profile=profile_amount))
-                profile = 0
-                browser.find_element("xpath",
-                                     f"/html/body/div[7]/div[2]/div[4]/div/div/div[3]/div[{profile}]/label").click()
-                browser.find_element("xpath", "/html/body/div[7]/div[2]/div[4]/div/div/button[1]").click()
-                break
-            except ValueError as err:
-                print(err)
-                print("Выбраный вами профиль не существует")
+                profile = int(
+                    func_timeout(timer_time, get_info_for_lks, kwargs={"event": event, "profile": profile_amount}))
+                if 0 < profile <= profile_amount:
+                    break
+            except FunctionTimedOut:
+                return exit_(browser)
+        browser.find_element("xpath",
+                             f"/html/body/div[7]/div[2]/div[4]/div/div/div[3]/div[{profile}]/label").click()
+        browser.find_element("xpath", "/html/body/div[7]/div[2]/div[4]/div/div/button[1]").click()
 
     soup = bs(markup=browser.page_source, features="lxml")
     prof_n = soup.find(class_="breadcrumb__fakultet__popup").text
@@ -66,12 +76,13 @@ def get_rating(login, password, event):
 
     while True:
         try:
-            # semester = int(get_info_for_lks(event, semester=semester_amount))
-            semester = 0
+            semester = int(
+                func_timeout(timer_time, get_info_for_lks, kwargs={"event": event, "semester": semester_amount}))
             if -1 < semester <= semester_amount:
                 break
-        except ValueError as err:
-            return False
+        except FunctionTimedOut:
+            return exit_(browser)
+
     if semester:
         prof_n = prof_n[29:prof_n.index(',') + 1] + prof_n[62:-8] + f", {semester}-й семестр"
         url_rating = f"https://student.rea.ru/rating/index.php?semester={semester}-й+семестр"
