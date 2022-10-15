@@ -7,9 +7,9 @@ from bs4 import BeautifulSoup as bs
 from LKS.lks_bot import get_info_for_lks
 
 
-def exit_(browser):
+def exit_(browser, login):
     browser.quit()
-    os.remove("temp_file.json")
+    os.remove(f"{login}.json")
     return None
 
 
@@ -17,7 +17,7 @@ def get_rating(login, password, event):
     final_return_file = []
 
     # Timer time in seconds
-    timer_time = 30
+    timer_time = 600
 
     # url
     url_main_page = "https://student.rea.ru/"
@@ -62,7 +62,7 @@ def get_rating(login, password, event):
                 if 0 < profile <= profile_amount:
                     break
             except FunctionTimedOut:
-                return exit_(browser)
+                return exit_(browser, login)
         browser.find_element("xpath",
                              f"/html/body/div[7]/div[2]/div[4]/div/div/div[3]/div[{profile}]/label").click()
         browser.find_element("xpath", "/html/body/div[7]/div[2]/div[4]/div/div/button[1]").click()
@@ -81,7 +81,7 @@ def get_rating(login, password, event):
             if -1 < semester <= semester_amount:
                 break
         except FunctionTimedOut:
-            return exit_(browser)
+            return exit_(browser, login)
 
     if semester:
         prof_n = prof_n[29:prof_n.index(',') + 1] + prof_n[62:-8] + f", {semester}-й семестр"
