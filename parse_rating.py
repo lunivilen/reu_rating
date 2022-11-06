@@ -118,6 +118,9 @@ def get_rating(login, password, event):
             b = " ".join(b)
             subjects_rows.append([b])
 
+        # Remove social and scientific subjects
+        subjects_rows = subjects_rows[0:-2]
+
         # Checking for course work
         is_course_work = soup.find_all(class_="es-rating__line es-rating__line-child close")
         if is_course_work != "":
@@ -141,6 +144,11 @@ def get_rating(login, password, event):
         scores = list(filter(lambda x: x[0].isdigit(), scores))
         scores_rows = [scores[i:i + 5] for i in range(0, len(scores), 5)]
 
+        # Remove social and scientific scores
+        for i in range(2):
+            if len(scores_rows[-1]) != 5:
+                scores_rows = scores_rows[:-1]
+
         # Generate dict for json file
         temp_dict = []
         final_rows_json = []
@@ -152,7 +160,7 @@ def get_rating(login, password, event):
 
         final_return_file.append({prof_n: final_rows_json})
         os.remove(f"rating.html")
-    except TypeError:
+    except (TypeError, IndexError):
         final_return_file.append({prof_n: None})
         os.remove(f"rating.html")
 

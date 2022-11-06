@@ -1,10 +1,10 @@
 import json
+import os
+from func_timeout import func_timeout, FunctionTimedOut
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
-import os
 import authorization as au
-from func_timeout import func_timeout, FunctionTimedOut
 
 
 def exit_(browser):
@@ -17,14 +17,14 @@ def get_rating(login, password):
     final_return_file = []
 
     # Timer time in seconds
-    timer_time = 2
+    timer_time = 600
 
     # urls
     url_main_page = "https://student.rea.ru/"
 
     # Option
     option = webdriver.ChromeOptions()
-    option.headless = False
+    option.headless = True
     option.add_argument('--no-sandbox')
     option.add_argument('--disable-dev-shm-usage')
 
@@ -118,6 +118,9 @@ def get_rating(login, password):
             b = " ".join(b)
             subjects_rows.append([b])
 
+        # Remove social and scientific subjects
+        subjects_rows = subjects_rows[0:-2]
+
         # Checking for course work
         is_course_work = soup.find_all(class_="es-rating__line es-rating__line-child close")
         if is_course_work != "":
@@ -141,6 +144,11 @@ def get_rating(login, password):
         scores = list(filter(lambda x: x[0].isdigit(), scores))
         scores_rows = [scores[i:i + 5] for i in range(0, len(scores), 5)]
 
+        # Remove social and scientific scores
+        for i in range(2):
+            if len(scores_rows[-1]) != 5:
+                scores_rows = scores_rows[:-1]
+
         # Generate dict for json file
         temp_dict = []
         final_rows_json = []
@@ -152,12 +160,12 @@ def get_rating(login, password):
 
         final_return_file.append({prof_n: final_rows_json})
         os.remove(f"rating.html")
-    except TypeError:
+    except (TypeError, IndexError):
         final_return_file.append({prof_n: None})
         os.remove(f"rating.html")
 
     return final_return_file
 
 
-with open(f"lol.json", "w", encoding="utf-8") as u:
-    json.dump(get_rating(au.login, au.password), u)
+with open(f"lol.txt", "w", encoding="utf-8") as u:
+    u.write(str(get_rating(au.login, au.password)))
