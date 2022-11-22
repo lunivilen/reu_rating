@@ -3,6 +3,7 @@ import os
 from func_timeout import func_timeout, FunctionTimedOut
 from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup as bs
 import authorization as au
 
@@ -35,6 +36,13 @@ def get_rating(login, password):
     browser.find_element("xpath", "/html/body/div[4]/div/div[1]/form/div[2]/input").send_keys(login)
     browser.find_element("xpath", "/html/body/div[4]/div/div[1]/form/div[3]/input").send_keys(password)
     browser.find_element("xpath", "/html/body/div[4]/div/div[1]/form/input[4]").click()
+
+    # Close popup windows
+    try:
+        for er in range(2):
+            browser.find_element(By.CLASS_NAME, "fancybox-close-small").click()
+    except NoSuchElementException:
+        pass
 
     soup = bs(markup=browser.page_source, features="lxml")
     try:
