@@ -33,7 +33,7 @@ with sq.connect("states.db") as con:
         list_login.append(login[0])
         list_password.append(password[0])
 
-    for login, password in zip(list_login[::-1], list_password[::-1]):
+    for login, password in zip(list_login, list_password):
         browser = webdriver.Chrome(options=option)
         browser.get(url=url_main_page)
 
