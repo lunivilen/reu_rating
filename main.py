@@ -6,6 +6,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup as bs
 import authorization as au
+import pandas as pd
+import dataframe_image as dfi
 
 
 def exit_(browser):
@@ -15,8 +17,6 @@ def exit_(browser):
 
 
 def get_rating(login, password):
-    final_return_file = []
-
     # Timer time in seconds
     timer_time = 600
 
@@ -124,7 +124,7 @@ def get_rating(login, password):
             b = list(filter(lambda x: x != "", i.split(" ")))
             b.pop(0)
             b = " ".join(b)
-            subjects_rows.append([b])
+            subjects_rows.append(b)
 
         # Remove social and scientific subjects
         subjects_rows = subjects_rows[0:-2]
@@ -143,9 +143,9 @@ def get_rating(login, password):
                 b = " ".join(b)
                 course_work_subject.append(b)
             for i in range(len(subjects_rows) - 1):
-                if subjects_rows[i] == subjects_rows[i + 1] and subjects_rows[i][0] in course_work_subject:
-                    course_work_subject.remove(subjects_rows[i][0])
-                    subjects_rows[i + 1][0] += "(Курсовая работа или пересдача)"
+                if subjects_rows[i] == subjects_rows[i + 1] and subjects_rows[i] in course_work_subject:
+                    course_work_subject.remove(subjects_rows[i])
+                    subjects_rows[i + 1] += " (Курсовая работа или пересдача)"
 
         scores = list(map(lambda x: x.text, soup.find_all(class_="es-rating__tab-body-item")))
         scores = list(filter(lambda x: x != "", scores[0].split(" ")))
@@ -157,22 +157,12 @@ def get_rating(login, password):
             if len(scores_rows[-1]) != 5:
                 scores_rows = scores_rows[:-1]
 
-        # Generate dict for json file
-        temp_dict = []
-        final_rows_json = []
-        for i in range(len(scores_rows)):
-            temp_dict.append(dict(zip(head_list[1:], scores_rows[i])))
-
-        for i in range(len(temp_dict)):
-            final_rows_json.append(dict.fromkeys(subjects_rows[i], temp_dict[i]))
-
-        final_return_file.append({prof_n: final_rows_json})
+        df = pd.DataFrame(scores_rows, subjects_rows, head_list[1:])
+        dfi.export(df, "image.png", fontsize=40)
         os.remove(f"rating.html")
     except (TypeError, IndexError):
-        final_return_file.append({prof_n: None})
-        os.remove(f"rating.html")
-
-    return final_return_file
+        return None
+    return True
 
 
 with open(f"lol.txt", "w", encoding="utf-8") as u:

@@ -5,6 +5,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
+import pandas as pd
+import dataframe_image as dfi
 from LKS.lks_bot import get_info_for_lks
 
 
@@ -15,8 +17,6 @@ def exit_(browser, login):
 
 
 def get_rating(login, password, event):
-    final_return_file = []
-
     # Timer time in seconds
     timer_time = 600
 
@@ -145,7 +145,7 @@ def get_rating(login, password, event):
             for i in range(len(subjects_rows) - 1):
                 if subjects_rows[i] == subjects_rows[i + 1] and subjects_rows[i][0] in course_work_subject:
                     course_work_subject.remove(subjects_rows[i][0])
-                    subjects_rows[i + 1][0] += "(Курсовая работа или пересдача)"
+                    subjects_rows[i + 1][0] += " (Курсовая работа или пересдача)"
 
         scores = list(map(lambda x: x.text, soup.find_all(class_="es-rating__tab-body-item")))
         scores = list(filter(lambda x: x != "", scores[0].split(" ")))
@@ -157,19 +157,10 @@ def get_rating(login, password, event):
             if len(scores_rows[-1]) != 5:
                 scores_rows = scores_rows[:-1]
 
-        # Generate dict for json file
-        temp_dict = []
-        final_rows_json = []
-        for i in range(len(scores_rows)):
-            temp_dict.append(dict(zip(head_list[1:], scores_rows[i])))
-
-        for i in range(len(temp_dict)):
-            final_rows_json.append(dict.fromkeys(subjects_rows[i], temp_dict[i]))
-
-        final_return_file.append({prof_n: final_rows_json})
+        df = pd.DataFrame(scores_rows, subjects_rows, head_list[1:])
+        dfi.export(df, "image.png", fontsize=40)
         os.remove(f"rating.html")
     except (TypeError, IndexError):
-        final_return_file.append({prof_n: None})
         os.remove(f"rating.html")
-
-    return final_return_file
+        return None
+    return True
